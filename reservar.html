@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservar - GEL HOTEL</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 50px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+        }
+        .btn-primary {
+            border-radius: 8px;
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-remove {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            display: none;
+        }
+        .btn-remove:hover {
+            background-color: #d9534f;
+        }
+        .logo {
+            display: block;
+            margin: 0 auto 20px;
+            max-width: 200px;
+        }
+        .status {
+            font-weight: bold;
+            color: green;
+        }
+        .btn-cancel {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .btn-cancel:hover {
+            background-color: #c9302c;
+        }
+        .indisponivel {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <img src="images/logo.png" alt="GEL HOTEL Logo" class="logo">
+
+    <div class="container">
+        <h2 class="text-center mb-4">Reserva de Quartos - GEL HOTEL</h2>
+        <a href="index.html" class="btn btn-secondary mb-3">Voltar para a Página Inicial</a>
+
+        <form action="#" method="post" id="reservaForm">
+            <div class="mb-3">
+                <label for="quarto" class="form-label">Selecione o Quarto</label>
+                <select id="quarto" name="quarto" class="form-select" required>
+                    <option value="cao">Quarto dos Cães (50€/noite)</option>
+                    <option value="gato">Quarto dos Gatos (35€/noite)</option>
+                    <option value="furacao">Quarto Furacão (50€/noite)</option>
+                    <option value="macaco">Quarto dos Macacos (70€/noite)</option>
+                    <option value="elefante">Quarto dos Elefantes (70€/noite)</option>
+                    <option value="preguica" disabled class="indisponivel">Quarto das Preguiças (Indisponível)</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="hospedes" class="form-label">Número de Hóspedes</label>
+                <input type="number" id="hospedes" name="hospedes" class="form-control" min="1" max="6" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="data_inicio" class="form-label">Data de Check-in</label>
+                <input type="date" id="data_inicio" name="data_inicio" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="data_fim" class="form-label">Data de Check-out</label>
+                <input type="date" id="data_fim" name="data_fim" class="form-control" required>
+            </div>
+
+            <div id="info-hospedes">
+                <h4 class="mt-4">Informações dos Hóspedes</h4>
+                <div class="hospede-info mb-4" id="hospede-1">
+                    <label for="nome-hospede" class="form-label">Nome Completo</label>
+                    <input type="text" name="nome_hospede[]" class="form-control" required>
+                    <label for="idade-hospede" class="form-label mt-2">Idade</label>
+                    <input type="number" name="idade_hospede[]" class="form-control" min="1" required>
+                    <label for="cartao" class="form-label mt-2">Cartão de Cidadão</label>
+                    <input type="text" name="cartao_hospede[]" class="form-control" required>
+                    <button type="button" class="btn-remove" onclick="removerHospede(1)">Remover</button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary mb-3" id="adicionar-hospede">Adicionar Hóspede</button>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Reservar Agora</button>
+            </div>
+        </form>
+
+        <!-- Total a Pagar -->
+        <div id="total-a-pagar" class="mt-4">
+            <h4>Total a Pagar: <span id="valor-total">0€</span></h4>
+        </div>
+
+        <!-- Lista de Reservas -->
+        <h3 class="mt-4">Reservas Confirmadas</h3>
+        <ul id="reservasList" class="list-group">
+            <!-- As reservas serão inseridas aqui via JavaScript -->
+        </ul>
+    </div>
+
+    <script>
+        let hospedeCount = 1;
+        let reservas = JSON.parse(localStorage.getItem('reservas')) || [];
+        const tarifas = {
+            cao: 50,
+            gato: 35,
+            furacao: 50,
+            macaco: 70,
+            elefante: 70
+        };
+
+        // Função para adicionar hóspede
+        document.getElementById('adicionar-hospede').addEventListener('click', function () {
+            hospedeCount++;
+            const hospedeDiv = document.createElement('div');
+            hospedeDiv.classList.add('hospede-info', 'mb-4');
+            hospedeDiv.id = `hospede-${hospedeCount}`;
+            hospedeDiv.innerHTML = `
+                <label for="nome-hospede" class="form-label">Nome Completo</label>
+                <input type="text" name="nome_hospede[]" class="form-control" required>
+                <label for="idade-hospede" class="form-label mt-2">Idade</label>
+                <input type="number" name="idade_hospede[]" class="form-control" min="1" required>
+                <label for="cartao" class="form-label mt-2">Cartão de Cidadão</label>
+                <input type="text" name="cartao_hospede[]" class="form-control" required>
+                <button type="button" class="btn-remove" onclick="removerHospede(${hospedeCount})">Remover</button>
+            `;
+            document.getElementById('info-hospedes').appendChild(hospedeDiv);
+        });
+
+        // Função para remover hóspede
+        function removerHospede(id) {
+            document.getElementById(`hospede-${id}`).remove();
+        }
+
+        // Função para submeter a reserva
+        document.getElementById('reservaForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const quarto = document.getElementById('quarto').value;
+            const hospedes = document.getElementById('hospedes').value;
+            const dataInicio = document.getElementById('data_inicio').value;
+            const dataFim = document.getElementById('data_fim').value;
+
+            const nomesHospedes = Array.from(document.querySelectorAll('[name="nome_hospede[]"]')).map(input => input.value);
+            const idadesHospedes = Array.from(document.querySelectorAll('[name="idade_hospede[]"]')).map(input => input.value);
+            const cartoesHospedes = Array.from(document.querySelectorAll('[name="cartao_hospede[]"]')).map(input => input.value);
+
+            const reserva = {
+                quarto,
+                hospedes,
+                dataInicio,
+                dataFim,
+                nomesHospedes,
+                idadesHospedes,
+                cartoesHospedes
+            };
+
+            // Calculando o total
+            const numeroDeNoites = (new Date(dataFim) - new Date(dataInicio)) / (1000 * 3600 * 24);
+            const valorTotal = tarifas[quarto] * numeroDeNoites;
+
+            // Adiciona a reserva ao array de reservas
+            reservas.push(reserva);
+            localStorage.setItem('reservas', JSON.stringify(reservas));
+
+            // Atualiza o valor total
+            document.getElementById('valor-total').textContent = `${valorTotal}€`;
+
+            // Exibe a reserva
+            exibirReservas();
+
+            // Limpar o formulário após reserva
+            this.reset();
+        });
+
+        // Função para exibir as reservas
+        function exibirReservas() {
+            const reservasList = document.getElementById('reservasList');
+            reservasList.innerHTML = '';
+
+            reservas.forEach((reserva, index) => {
+                const reservaItem = document.createElement('li');
+                reservaItem.classList.add('list-group-item');
+                reservaItem.innerHTML = `
+                    <h5>Reserva para o Quarto: ${reserva.quarto}</h5>
+                    <p><strong>Check-in:</strong> ${reserva.dataInicio} <strong>Check-out:</strong> ${reserva.dataFim}</p>
+                    <p><strong>Número de Hóspedes:</strong> ${reserva.hospedes}</p>
+                    <p><strong>Hóspedes:</strong></p>
+                    <ul>
+                        ${reserva.nomesHospedes.map((nome, index) => `
+                            <li>${nome} (Idade: ${reserva.idadesHospedes[index]}, Cartão: ${reserva.cartoesHospedes[index]})</li>
+                        `).join('')}
+                    </ul>
+                    <p class="status">Status: Confirmada</p>
+                    <button class="btn-cancel" onclick="cancelarReserva(${index})">Cancelar Reserva</button>
+                `;
+                reservasList.appendChild(reservaItem);
+            });
+        }
+
+        // Função para cancelar reserva
+        function cancelarReserva(index) {
+            reservas.splice(index, 1);
+            localStorage.setItem('reservas', JSON.stringify(reservas));
+            exibirReservas();
+        }
+
+        // Exibe as reservas ao carregar a página
+        window.onload = exibirReservas;
+    </script>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

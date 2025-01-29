@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestão de Reservas - GEL HOTEL</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 50px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .btn-back {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .btn-back:hover {
+            background-color: #0056b3;
+        }
+        .card {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            font-weight: bold;
+        }
+        .table th, .table td {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>Administração - Gestão de Reservas</h2>
+            <a href="index.html" class="btn-back">Voltar para a Página Inicial</a>
+        </div>
+
+        <!-- Informações de Gestão -->
+        <div class="row">
+            <!-- Total de Reservas -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Total de Reservas</div>
+                    <div class="card-body">
+                        <h3 id="totalReservas">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dias Reservados -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Dias Reservados</div>
+                    <div class="card-body">
+                        <h3 id="diasReservados">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Faturado -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Total Faturado</div>
+                    <div class="card-body">
+                        <h3 id="totalFaturado">€ 0,00</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Reservas -->
+        <h3 class="mt-4">Lista de Reservas</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Quarto</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Dias</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="reservasTabela">
+                <!-- As reservas serão inseridas aqui via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Carregar as reservas do localStorage
+        let reservas = JSON.parse(localStorage.getItem('reservas')) || [];
+
+        // Função para calcular a diferença de dias entre duas datas
+        function calcularDias(dataInicio, dataFim) {
+            const inicio = new Date(dataInicio);
+            const fim = new Date(dataFim);
+            const diffTime = fim - inicio;
+            return diffTime / (1000 * 3600 * 24);
+        }
+
+        // Função para calcular o valor total faturado com base nas reservas
+        function calcularTotalFaturado() {
+            const precoPorDia = 50; // Exemplo: preço por dia de reserva (ajuste conforme necessário)
+            let total = 0;
+
+            reservas.forEach(reserva => {
+                const diasReservados = calcularDias(reserva.dataInicio, reserva.dataFim);
+                total += diasReservados * precoPorDia;
+            });
+
+            return total;
+        }
+
+        // Função para atualizar as informações analíticas
+        function atualizarInfoGestao() {
+            const totalReservas = reservas.length;
+            let totalDias = 0;
+            let totalFaturado = calcularTotalFaturado();
+
+            reservas.forEach(reserva => {
+                totalDias += calcularDias(reserva.dataInicio, reserva.dataFim);
+            });
+
+            // Atualiza os valores na página
+            document.getElementById('totalReservas').textContent = totalReservas;
+            document.getElementById('diasReservados').textContent = totalDias;
+            document.getElementById('totalFaturado').textContent = `€ ${totalFaturado.toFixed(2)}`;
+        }
+
+        // Função para exibir as reservas na tabela
+        function exibirReservasTabela() {
+            const tabelaReservas = document.getElementById('reservasTabela');
+            tabelaReservas.innerHTML = '';
+
+            reservas.forEach(reserva => {
+                const dias = calcularDias(reserva.dataInicio, reserva.dataFim);
+                const precoPorDia = 50; // Exemplo de preço por dia
+                const total = dias * precoPorDia;
+
+                const reservaRow = document.createElement('tr');
+                reservaRow.innerHTML = `
+                    <td>${reserva.quarto}</td>
+                    <td>${reserva.dataInicio}</td>
+                    <td>${reserva.dataFim}</td>
+                    <td>${dias}</td>
+                    <td>€ ${total.toFixed(2)}</td>
+                `;
+                tabelaReservas.appendChild(reservaRow);
+            });
+        }
+
+        // Inicializa a página
+        window.onload = () => {
+            atualizarInfoGestao();
+            exibirReservasTabela();
+        };
+    </script>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
